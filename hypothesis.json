@@ -1,0 +1,16 @@
+{
+	"request": [],
+	"sendHeader": [],
+	"receiveHeader": [
+		{
+			"enable": true,
+			"name": "Hypothesis",
+			"ruleType": "modifyReceiveHeader",
+			"matchType": "all",
+			"pattern": "",
+			"exclude": "",
+			"isFunction": true,
+			"code": "let directives = ['script-src', 'style-src', 'font-src', 'frame-src'];\nlet hyp_sources = ['hypothes.is', '*.hypothes.is'];\nfor (const i in val) {\n\tif (val[i].name.toLowerCase() === 'content-security-policy') {\n\t\tlet policies = {};\n\t\tval[i].value.split(';').forEach(policy => {\n\t\t\tpolicy = policy.trim().split(' ');\n\t\t\tlet directive = policy[0];\n\t\t\tlet sources = policy.slice(1);\n\t\t\tpolicies[directive] = sources; // if directive exists, append\t\n\t\t})\n\t\tdirectives.forEach(directive => {\n\t\t\tif (directive in policies) {\n\t\t\t\tpolicies[directive] = policies[directive].concat(hyp_sources);\n\t\t\t} else if ('default-src' in policies) {  // but some directives fall back to others before (e.g. frame-src)\n\t\t\t\tif (policies['default-src'].includes(\"'none'\")) {  // is it always 'none'?\n\t\t\t\t\tpolicies[directive] = hyp_sources;\n\t\t\t\t}\n\t\t\t}\n\t\t})\n\t\tlet value = [];\n\t\tObject.keys(policies).forEach(directive => {\n\t\t\tvalue.push([directive].concat(policies[directive]).join(' '));\n\t\t})\n\t\tvalue = value.join(';');\n\t\tval[i].value = value;\n\t}\n}"
+		}
+	]
+}
