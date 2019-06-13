@@ -1,0 +1,28 @@
+let directives = ['script-src', 'style-src', 'font-src', 'frame-src'];
+let hyp_sources = ['hypothes.is', '*.hypothes.is'];
+for (const i in val) {
+	if (val[i].name.toLowerCase() === 'content-security-policy') {
+		let policies = {};
+		val[i].value.split(';').forEach(policy => {
+			policy = policy.trim().split(' ');
+			let directive = policy[0];
+			let sources = policy.slice(1);
+			policies[directive] = sources; // if directive exists, append	
+		})
+		directives.forEach(directive => {
+			if (directive in policies) {
+				policies[directive] = policies[directive].concat(hyp_sources);
+			} else if ('default-src' in policies) {  // but some directives fall back to others before (e.g. frame-src)
+				if (policies['default-src'].includes("'none'")) {  // is it always 'none'?
+					policies[directive] = hyp_sources;
+				}
+			}
+		})
+		let value = [];
+		Object.keys(policies).forEach(directive => {
+			value.push([directive].concat(policies[directive]).join(' '));
+		})
+		value = value.join(';');
+		val[i].value = value;
+	}
+}
